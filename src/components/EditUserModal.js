@@ -4,7 +4,7 @@ export default function EditUserModal({ user, isOpen, onClose, onSave }) {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
-    role: '',
+    roles: [],
   });
 
   useEffect(() => {
@@ -12,33 +12,50 @@ export default function EditUserModal({ user, isOpen, onClose, onSave }) {
       setFormData({
         username: user.username || '',
         email: user.email || '',
-        role: user.role || '',
+        roles: Array.isArray(user.roles) ? user.roles : [],
       });
     }
   }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'roles') {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value.split(',').map((r) => r.trim()).filter(Boolean),
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user?.id) {
+      alert('Error: Invalid user ID');
+      return;
+    }
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch(`https://forum-gen-backend-production.up.railway.app/api/users/${user._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
+      const res = await fetch(
+        `https://forum-gen-backend-production.up.railway.app/api/users/${user.id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
-      if (!res.ok) throw new Error('Update failed');
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.message || 'Update failed');
+      }
       const updatedUser = await res.json();
-      onSave(updatedUser);
+      onSave({ id: user.id, ...formData }); // Ensure id is included
       onClose();
     } catch (err) {
       alert('Error updating user: ' + err.message);
@@ -75,18 +92,16 @@ export default function EditUserModal({ user, isOpen, onClose, onSave }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium">Role</label>
-            <select
-              name="role"
-              value={formData.role}
+            <label className="block text-sm font-medium">Roles</label>
+            <input
+              type="text"
+              name="roles"
+              value={formData.roles.join(', ')}
               onChange={handleChange}
               className="w-full border rounded px-3 py-2"
+              placeholder="Enter roles (e.g., admin, user)"
               required
-            >
-              <option value="">Select role</option>
-              <option value="admin">Admin</option>
-              <option value="user">User</option>
-            </select>
+            />
           </div>
           <div className="flex justify-end space-x-2">
             <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600">
