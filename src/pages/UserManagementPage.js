@@ -40,7 +40,7 @@ export default function UserManagementPage() {
         throw new Error(errBody.message || 'Failed to delete user');
       }
 
-      // filter out by `id` (not `_id`)
+      // Remove deleted user by `id`
       setUsers((prev) => prev.filter((u) => u.id !== userId));
     } catch (err) {
       alert('Error deleting user: ' + err.message);
@@ -49,7 +49,7 @@ export default function UserManagementPage() {
 
   const handleSave = (updatedUser) => {
     console.log('Updated user returned from modal:', updatedUser);
-    // merge by `id`
+    // Merge update by `id`
     setUsers((prev) =>
       prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
     );
@@ -73,38 +73,32 @@ export default function UserManagementPage() {
           </tr>
         </thead>
         <tbody>
-          {users.map((user) => {
-            // debug shape:
-            console.log('USER ROW:', user);
-            return (
-              <tr key={user.id} className="border-t">
-                <td className="p-3">{user.username}</td>
-                <td className="p-3">{user.email}</td>
-                <td className="p-3">
-                  {Array.isArray(user.roles)
-                    ? user.roles.join(', ')
-                    : user.roles}
-                </td>
-                <td className="p-3">
-                  {new Date(user.createdAt).toLocaleDateString()}
-                </td>
-                <td className="p-3 space-x-2">
-                  <button
-                    onClick={() => setEditingUser(user)}
-                    className="text-sm text-blue-600 hover:underline"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(user.id)}
-                    className="text-sm text-red-600 hover:underline"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
+          {users.map((user) => (
+            <tr key={user.id} className="border-t">
+              <td className="p-3">{user.username}</td>
+              <td className="p-3">{user.email}</td>
+              <td className="p-3">
+                {Array.isArray(user.roles) ? user.roles.join(', ') : user.roles}
+              </td>
+              <td className="p-3">
+                {new Date(user.createdAt).toLocaleDateString()}
+              </td>
+              <td className="p-3 space-x-2">
+                <button
+                  onClick={() => setEditingUser(user)}
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(user.id)}
+                  className="text-sm text-red-600 hover:underline"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
 
